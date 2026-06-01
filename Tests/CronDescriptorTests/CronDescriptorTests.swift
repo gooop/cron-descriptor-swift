@@ -18,7 +18,7 @@ struct CronDescriptorTests {
         "not-cron",
         "*****",
         "* * * *",
-        "* * * * * *",
+        "* * * * * * *",
         "60 * * * *",
         "* 24 * * *",
         "* * 32 * *",
@@ -271,6 +271,19 @@ struct CronDescriptorTests {
         var opts = Options()
         opts.verbose = true
         #expect(try describe("* * * * *", options: opts) == "Every minute, every hour, every day")
+    }
+
+    // MARK: - 6-field (seconds)
+
+    @Test("6-field seconds", arguments: [
+        ("* * * * * *",   "Every second"),
+        ("*/30 * * * * *", "Every 30 seconds"),
+        ("0 * * * * *",   "Every minute"),
+        ("30 0 9 * * *",  "At 30 seconds past the minute, at 9:00 AM"),
+        ("0 30 9 * * *",  "At 9:30 AM"),
+        ("*/5 * * * * *", "Every 5 seconds"),
+    ]) func sixFieldSeconds(expr: String, expected: String) throws {
+        #expect(try describe(expr) == expected)
     }
 
     // MARK: - toStringOrError

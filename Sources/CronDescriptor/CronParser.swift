@@ -10,53 +10,74 @@ struct CronParser {
         self.dayOfWeekStartIndexZero = dayOfWeekStartIndexZero
     }
 
-    // Returns 5-element array: [minute, hour, dom, month, dow]
+    // Returns 6-element array: [seconds, minute, hour, dom, month, dow]
+    // seconds is "" for 5-field expressions
     func parse() throws -> [String] {
         let upper = expression.trimmingWhitespace().uppercased()
 
         // @-aliases
         switch upper {
-        case "@REBOOT": return ["@reboot", "", "", "", ""]
-        case "@YEARLY", "@ANNUALLY": return ["0", "0", "1", "1", "*"]
-        case "@MONTHLY": return ["0", "0", "1", "*", "*"]
-        case "@WEEKLY": return ["0", "0", "*", "*", "0"]
-        case "@DAILY", "@MIDNIGHT": return ["0", "0", "*", "*", "*"]
-        case "@HOURLY": return ["0", "*", "*", "*", "*"]
+        case "@REBOOT": return ["", "@reboot", "", "", "", ""]
+        case "@YEARLY", "@ANNUALLY": return ["", "0", "0", "1", "1", "*"]
+        case "@MONTHLY": return ["", "0", "0", "1", "*", "*"]
+        case "@WEEKLY": return ["", "0", "0", "*", "*", "0"]
+        case "@DAILY", "@MIDNIGHT": return ["", "0", "0", "*", "*", "*"]
+        case "@HOURLY": return ["", "0", "*", "*", "*", "*"]
         default: break
         }
 
-        var parts = expression.trimmingWhitespace().splitOnWhitespace()
+        var fields = expression.trimmingWhitespace().splitOnWhitespace()
 
-        guard parts.count == 5 else {
-            throw CronDescriptorError.parseError("Expression must have exactly 5 fields, found \(parts.count)")
+        switch fields.count {
+        case 5:
+            fields.insert("", at: 0)
+        case 6:
+            // 6-field: last field is a 4-digit year → ignore it, treat as 5-field
+            if fields[5].allSatisfy({ $0.isNumber }) && fields[5].count == 4 {
+                fields.removeLast()
+                fields.insert("", at: 0)
+            }
+            // else: first field is seconds, keep as-is
+        default:
+            throw CronDescriptorError.parseError("Expression must have 5 or 6 fields, found \(fields.count)")
         }
 
         // Normalize each field
-        parts[0] = try normalize(parts[0], field: .minute)
-        parts[1] = try normalize(parts[1], field: .hour)
-        parts[2] = try normalize(parts[2], field: .dom)
-        parts[3] = try normalizeMonth(parts[3])
-        parts[4] = try normalizeDow(parts[4])
+        if !fields[0].isEmpty {
+            fields[0] = normalizeStep(fields[0])
+        }
+        fields[1] = try normalize(fields[1], field: .minute)
+        fields[2] = try normalize(fields[2], field: .hour)
+        fields[3] = try normalize(fields[3], field: .dom)
+        fields[4] = try normalizeMonth(fields[4])
+        fields[5] = try normalizeDow(fields[5])
 
         // Validate ranges
-        try validate(parts[0], range: 0...59, field: "minute")
-        try validate(parts[1], range: 0...23, field: "hour")
-        try validate(parts[2], range: 1...31, field: "day of month")
-        try validate(parts[3], range: 1...12, field: "month")
-        try validate(parts[4], range: 0...6, field: "day of week")
+        if !fields[0].isEmpty {
+            try validate(fields[0], range: 0...59, field: "second")
+        }
+        try validate(fields[1], range: 0...59, field: "minute")
+        try validate(fields[2], range: 0...23, field: "hour")
+        try validate(fields[3], range: 1...31, field: "day of month")
+        try validate(fields[4], range: 1...12, field: "month")
+        try validate(fields[5], range: 0...6, field: "day of week")
 
-        return parts
+        return fields
     }
 
     // MARK: - Normalization
 
     private enum Field { case minute, hour, dom }
 
+    // Shared: 0/n → */n
+    private func normalizeStep(_ field: String) -> String {
+        field.hasPrefix("0/") ? "*/" + field.dropFirst(2) : field
+    }
+
     private func normalize(_ field: String, field fieldType: Field) throws -> String {
         var f = field
         if f == "?" { f = "*" }
-        // 0/n → */n
-        if f.hasPrefix("0/") { f = "*/" + f.dropFirst(2) }
+        f = normalizeStep(f)
         return f
     }
 

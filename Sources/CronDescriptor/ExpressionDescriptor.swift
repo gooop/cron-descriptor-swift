@@ -16,16 +16,24 @@ class ExpressionDescriptor {
         let parser = CronParser(expression, dayOfWeekStartIndexZero: options.dayOfWeekStartIndexZero)
         parts = try parser.parse()
 
-        if parts[0] == "@reboot" {
+        if parts[1] == "@reboot" {
             return i18n.atReboot()
         }
 
+        let seconds = getSecondsDescription()
         let time = getTimeOfDayDescription()
         let dom = getDayOfMonthDescription()
         let month = getMonthDescription()
         let dow = getDayOfWeekDescription()
 
-        var description = time + dom + dow + month
+        var description: String
+        if seconds.isEmpty {
+            description = time + dom + dow + month
+        } else {
+            description = seconds
+            if !time.isEmpty { description += ", " + time }
+            description += dom + dow + month
+        }
         description = transformVerbosity(description)
 
         while description.hasSuffix(", ") {
@@ -39,8 +47,8 @@ class ExpressionDescriptor {
     // MARK: - Time of day
 
     private func getTimeOfDayDescription() -> String {
-        let minute = parts[0]
-        let hour = parts[1]
+        let minute = parts[1]
+        let hour = parts[2]
         let specialChars: Set<Character> = ["/", "-", ",", "*"]
 
         let minuteIsPlain = !minute.contains(where: { specialChars.contains($0) })
@@ -82,19 +90,34 @@ class ExpressionDescriptor {
 
     // MARK: - Field descriptions
 
-    private func getMinutesDescription() -> String {
-        let hour = parts[1]
+    private func getSecondsDescription() -> String {
+        guard !parts[0].isEmpty else { return "" }
         return getSegmentDescription(
             expression: parts[0],
+            allDescription: i18n.everySecond(),
+            getSingleItemDescription: { s in s },
+            getIncrementDescriptionFormat: { s in self.i18n.everyXSeconds(s) },
+            getRangeDescriptionFormat: { _ in self.i18n.secondsXThroughXPastTheMinute() },
+            getDescriptionFormat: { s in
+                s == "0" ? "" : self.i18n.atXSecondsPastTheMinute()
+            }
+        )
+    }
+
+    private func getMinutesDescription() -> String {
+        let hour = parts[2]
+        let seconds = parts[0]
+        return getSegmentDescription(
+            expression: parts[1],
             allDescription: i18n.everyMinute(),
             getSingleItemDescription: { s in s },
             getIncrementDescriptionFormat: { s in self.i18n.everyXMinutes(s) },
             getRangeDescriptionFormat: { _ in self.i18n.minutesXThroughXPastTheHour() },
             getDescriptionFormat: { s in
-                if s == "0", !hour.contains("/") {
+                if s == "0" && seconds.isEmpty && !hour.contains("/") {
                     return self.i18n.everyHour()
                 }
-                if s == "0" {
+                if s == "0" && seconds.isEmpty {
                     return self.i18n.onTheHour()
                 }
                 return self.i18n.atXMinutesPastTheHour()
@@ -104,7 +127,7 @@ class ExpressionDescriptor {
 
     private func getHoursDescription() -> String {
         return getSegmentDescription(
-            expression: parts[1],
+            expression: parts[2],
             allDescription: i18n.everyHour(),
             getSingleItemDescription: { s in self.formatTime(s, "0") },
             getIncrementDescriptionFormat: { s in self.i18n.everyXHours(s) },
@@ -114,8 +137,8 @@ class ExpressionDescriptor {
     }
 
     private func getDayOfMonthDescription() -> String {
-        let dom = parts[2]
-        if dom == "*" && parts[4] != "*" { return "" }
+        let dom = parts[3]
+        if dom == "*" && parts[5] != "*" { return "" }
         return getSegmentDescription(
             expression: dom,
             allDescription: i18n.commaEveryDay(),
@@ -129,7 +152,7 @@ class ExpressionDescriptor {
     private func getMonthDescription() -> String {
         let months = i18n.monthsOfTheYear()
         return getSegmentDescription(
-            expression: parts[3],
+            expression: parts[4],
             allDescription: "",
             getSingleItemDescription: { s in
                 if let n = Int(s), (1 ... 12).contains(n) { return months[n - 1] }
@@ -142,11 +165,11 @@ class ExpressionDescriptor {
     }
 
     private func getDayOfWeekDescription() -> String {
-        if parts[4] == "*" { return "" }
+        if parts[5] == "*" { return "" }
         let days = i18n.daysOfTheWeek()
-        let domSpecified = parts[2] != "*"
+        let domSpecified = parts[3] != "*"
         return getSegmentDescription(
-            expression: parts[4],
+            expression: parts[5],
             allDescription: i18n.commaEveryDay(),
             getSingleItemDescription: { s in
                 if let n = Int(s) { return days[n % 7] }

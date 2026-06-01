@@ -42,21 +42,25 @@ public protocol CronLocale {
     // Verbosity post-processing
     func conciseVerbosityReplacements() -> [String: String]
 
+    // Seconds
+    func everySecond() -> String
+    func everyXSeconds(_ n: String) -> String
+    func secondsXThroughXPastTheMinute() -> String
+    func atXSecondsPastTheMinute() -> String
+
     // Special
     func atReboot() -> String
     func anErrorOccurred() -> String
 }
 
 public extension CronLocale {
-    func conciseVerbosityReplacements() -> [String: String] {
-        [:]
-    }
-
-    func atReboot() -> String {
-        "Run once, at startup"
-    }
-
+    func conciseVerbosityReplacements() -> [String: String] { [:] }
+    func atReboot() -> String { "Run once, at startup" }
     func anErrorOccurred() -> String {
         "An error occurred when generating the expression description. Check the cron expression syntax."
     }
+    func everySecond() -> String { "every second" }
+    func everyXSeconds(_ n: String) -> String { "every \(n) seconds" }
+    func secondsXThroughXPastTheMinute() -> String { "seconds %s through %s past the minute" }
+    func atXSecondsPastTheMinute() -> String { "at %s seconds past the minute" }
 }
