@@ -34,4 +34,14 @@ public enum CronDescriptor {
         let descriptor = ExpressionDescriptor(expression: expression, options: options)
         return try descriptor.getFullDescription()
     }
+
+    /// Converts a cron expression to a human-readable description.
+    /// Non-throwing variant of `toString`. Returns a localized error message on invalid input instead of throwing.
+    public static func toStringOrError(_ expression: String, options: Options = Options()) -> String {
+        do {
+            return try toString(expression, options: options)
+        } catch {
+            return options.locale.anErrorOccurred()
+        }
+    }
 }

@@ -5,6 +5,10 @@ private func describe(_ expr: String, options: Options = Options()) throws -> St
     try CronDescriptor.toString(expr, options: options)
 }
 
+private func describeOrError(_ expr: String, options: Options = Options()) -> String {
+    CronDescriptor.toStringOrError(expr, options: options)
+}
+
 struct CronDescriptorTests {
 
     // MARK: - Invalid expressions throw
@@ -267,6 +271,18 @@ struct CronDescriptorTests {
         var opts = Options()
         opts.verbose = true
         #expect(try describe("* * * * *", options: opts) == "Every minute, every hour, every day")
+    }
+
+    // MARK: - toStringOrError
+
+    @Test func toStringOrErrorValid() {
+        #expect(describeOrError("* * * * *") == "Every minute")
+    }
+
+    @Test func toStringOrErrorInvalid() {
+        let result = describeOrError("not-cron")
+        #expect(result == EnLocale().anErrorOccurred())
+        #expect(!result.isEmpty)
     }
 
     // MARK: - dayOfWeekStartIndexZero = false
