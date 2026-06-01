@@ -298,6 +298,51 @@ struct CronDescriptorTests {
         #expect(!result.isEmpty)
     }
 
+    // MARK: - L modifier
+
+    @Test("L — DOM", arguments: [
+        ("0 0 L * *",   "At 12:00 AM, on the last day of the month"),
+        ("0 0 LW * *",  "At 12:00 AM, on the last weekday of the month"),
+        ("0 0 WL * *",  "At 12:00 AM, on the last weekday of the month"),
+        ("0 0 L-5 * *", "At 12:00 AM, 5 days before the last day of the month"),
+    ]) func lModifierDom(expr: String, expected: String) throws {
+        #expect(try describe(expr) == expected)
+    }
+
+    @Test("L — DOW (last weekday of month)", arguments: [
+        ("0 0 * * 5L", "At 12:00 AM, on the last Friday of the month"),
+        ("0 0 * * 1L", "At 12:00 AM, on the last Monday of the month"),
+    ]) func lModifierDow(expr: String, expected: String) throws {
+        #expect(try describe(expr) == expected)
+    }
+
+    // MARK: - W modifier
+
+    @Test("W — nearest weekday", arguments: [
+        ("0 0 1W * *",  "At 12:00 AM, on the first weekday of the month"),
+        ("0 0 15W * *", "At 12:00 AM, on the weekday nearest day 15 of the month"),
+    ]) func wModifier(expr: String, expected: String) throws {
+        // Note: "on %s of the month" format, so "the first weekday" and "the weekday nearest..."
+        // produce correct English without double-the
+        #expect(try describe(expr) == expected)
+    }
+
+    @Test func wModifierInvalidRange() {
+        #expect(throws: (any Error).self) { try describe("0 0 1W,15W * *") }
+        #expect(throws: (any Error).self) { try describe("0 0 1W-5W * *") }
+    }
+
+    // MARK: - # modifier
+
+    @Test("# — Nth weekday", arguments: [
+        ("0 0 * * 1#1", "At 12:00 AM, on the first Monday of the month"),
+        ("0 0 * * 1#2", "At 12:00 AM, on the second Monday of the month"),
+        ("0 0 * * 5#3", "At 12:00 AM, on the third Friday of the month"),
+        ("0 0 * * 0#4", "At 12:00 AM, on the fourth Sunday of the month"),
+    ]) func hashModifier(expr: String, expected: String) throws {
+        #expect(try describe(expr) == expected)
+    }
+
     // MARK: - monthStartIndexZero = true
 
     @Test func monthZeroBased() throws {

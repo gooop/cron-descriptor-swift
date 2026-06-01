@@ -48,6 +48,23 @@ public protocol CronLocale {
     func secondsXThroughXPastTheMinute() -> String
     func atXSecondsPastTheMinute() -> String
 
+    // L/W/# modifiers
+    func commaOnTheLastDayOfTheMonth() -> String
+    func commaOnTheLastWeekdayOfTheMonth() -> String
+    func commaDaysBeforeTheLastDayOfTheMonth() -> String // format: "%s days before..."
+    func lastDay() -> String
+    func firstWeekday() -> String
+    func weekdayNearestDayX() -> String // format: "the weekday nearest day %s"
+    func commaOnTheX0OfTheMonth() -> String // format: ", on the %s of the month"
+    func commaOnTheLastX0OfTheMonth() -> String // format: ", on the last %s of the month"
+    func commaOnThe() -> String // prefix: ", on the "
+    func spaceX0OfTheMonth() -> String // suffix: " of the month"
+    func first() -> String
+    func second() -> String
+    func third() -> String
+    func fourth() -> String
+    func fifth() -> String
+
     // Special
     func atReboot() -> String
     func anErrorOccurred() -> String
@@ -63,4 +80,19 @@ public extension CronLocale {
     func everyXSeconds(_ n: String) -> String { "every \(n) seconds" }
     func secondsXThroughXPastTheMinute() -> String { "seconds %s through %s past the minute" }
     func atXSecondsPastTheMinute() -> String { "at %s seconds past the minute" }
+    func commaOnTheLastDayOfTheMonth() -> String { ", on the last day of the month" }
+    func commaOnTheLastWeekdayOfTheMonth() -> String { ", on the last weekday of the month" }
+    func commaDaysBeforeTheLastDayOfTheMonth() -> String { ", %s days before the last day of the month" }
+    func lastDay() -> String { "last day" }
+    func firstWeekday() -> String { "the first weekday" }
+    func weekdayNearestDayX() -> String { "the weekday nearest day %s" }
+    func commaOnTheX0OfTheMonth() -> String { ", on %s of the month" }
+    func commaOnTheLastX0OfTheMonth() -> String { ", on the last %s of the month" }
+    func commaOnThe() -> String { ", on the " }
+    func spaceX0OfTheMonth() -> String { " of the month" }
+    func first() -> String { "first" }
+    func second() -> String { "second" }
+    func third() -> String { "third" }
+    func fourth() -> String { "fourth" }
+    func fifth() -> String { "fifth" }
 }

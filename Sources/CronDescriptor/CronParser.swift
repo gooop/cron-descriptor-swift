@@ -44,6 +44,11 @@ struct CronParser {
             throw CronDescriptorError.parseError("Expression must have 5 or 6 fields, found \(fields.count)")
         }
 
+        // W cannot appear in a list or range
+        if fields[3].contains("W") && (fields[3].contains(",") || fields[3].contains("-")) {
+            throw CronDescriptorError.parseError("'W' cannot be used in a list or range in day-of-month")
+        }
+
         // Normalize each field
         if !fields[0].isEmpty {
             fields[0] = normalizeStep(fields[0])
@@ -178,6 +183,8 @@ struct CronParser {
 
     private func validateSegment(_ segment: String, range: ClosedRange<Int>, field: String) throws {
         if segment == "*" { return }
+        // L, W, # modifiers: skip numeric validation
+        if segment.contains("L") || segment.contains("W") || segment.contains("#") { return }
         // step: */n or start/n
         if segment.contains("/") {
             let parts = segment.split(separator: "/", maxSplits: 1).map(String.init)

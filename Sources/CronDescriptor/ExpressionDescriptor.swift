@@ -139,6 +139,27 @@ class ExpressionDescriptor {
     private func getDayOfMonthDescription() -> String {
         let dom = parts[3]
         if dom == "*" && parts[5] != "*" { return "" }
+
+        switch dom {
+        case "L":
+            return i18n.commaOnTheLastDayOfTheMonth()
+        case "LW", "WL":
+            return i18n.commaOnTheLastWeekdayOfTheMonth()
+        default:
+            if dom.hasPrefix("L-"), let offset = Int(dom.dropFirst(2)) {
+                return applyFormat(i18n.commaDaysBeforeTheLastDayOfTheMonth(), String(offset))
+            }
+            if dom.contains("W") {
+                let dayStr = dom.replacing("W", with: "")
+                if let n = Int(dayStr) {
+                    let nearest = n == 1
+                        ? i18n.firstWeekday()
+                        : applyFormat(i18n.weekdayNearestDayX(), String(n))
+                    return applyFormat(i18n.commaOnTheX0OfTheMonth(), nearest)
+                }
+            }
+        }
+
         return getSegmentDescription(
             expression: dom,
             allDescription: i18n.commaEveryDay(),
@@ -172,15 +193,38 @@ class ExpressionDescriptor {
             expression: parts[5],
             allDescription: i18n.commaEveryDay(),
             getSingleItemDescription: { s in
-                if let n = Int(s) { return days[n % 7] }
-                return s
+                var exp = s
+                if let hashIdx = s.firstIndex(of: "#") {
+                    exp = String(s[..<hashIdx])
+                } else if s.contains("L") {
+                    exp = s.replacing("L", with: "")
+                }
+                if let n = Int(exp) { return days[n % 7] }
+                return exp
             },
             getIncrementDescriptionFormat: { s in self.i18n.commaEveryXDaysOfTheWeek(s) },
             getRangeDescriptionFormat: { _ in
                 domSpecified ? self.i18n.commaAndXThroughX() : self.i18n.commaXThroughX()
             },
-            getDescriptionFormat: { _ in
-                domSpecified ? self.i18n.commaAndOnX() : self.i18n.commaOnlyOnX()
+            getDescriptionFormat: { s in
+                if s.contains("#") {
+                    guard let hashIdx = s.firstIndex(of: "#") else { return self.i18n.commaOnlyOnX() }
+                    let occurrence = String(s[s.index(after: hashIdx)...])
+                    let ordinal: String
+                    switch occurrence {
+                    case "1": ordinal = self.i18n.first()
+                    case "2": ordinal = self.i18n.second()
+                    case "3": ordinal = self.i18n.third()
+                    case "4": ordinal = self.i18n.fourth()
+                    case "5": ordinal = self.i18n.fifth()
+                    default:  ordinal = occurrence
+                    }
+                    return self.i18n.commaOnThe() + ordinal + " %s" + self.i18n.spaceX0OfTheMonth()
+                } else if s.contains("L") {
+                    return self.i18n.commaOnTheLastX0OfTheMonth()
+                } else {
+                    return domSpecified ? self.i18n.commaAndOnX() : self.i18n.commaOnlyOnX()
+                }
             }
         )
     }
