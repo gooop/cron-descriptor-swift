@@ -252,7 +252,7 @@ class ExpressionDescriptor {
                 desc += rangeDesc
             } else if segs[0] != "*" && !segs[0].isEmpty {
                 var startDesc = applyFormat(getDescriptionFormat(segs[0]), getSingleItemDescription(segs[0]))
-                startDesc = startDesc.replacingOccurrences(of: ", ", with: "")
+                startDesc = startDesc.replacing(", ", with: "")
                 desc += i18n.commaStartingX(startDesc)
             }
             return desc
@@ -281,11 +281,11 @@ class ExpressionDescriptor {
     private func transformVerbosity(_ description: String) -> String {
         guard !options.verbose else { return description }
         var d = description
-        d = d.replacingOccurrences(of: ", \(i18n.everyMinute())", with: "")
-        d = d.replacingOccurrences(of: ", \(i18n.everyHour())", with: "")
-        d = d.replacingOccurrences(of: i18n.commaEveryDay(), with: "")
+        d = d.replacing(", \(i18n.everyMinute())", with: "")
+        d = d.replacing(", \(i18n.everyHour())", with: "")
+        d = d.replacing(i18n.commaEveryDay(), with: "")
         for (pattern, replacement) in i18n.conciseVerbosityReplacements() {
-            d = d.replacingOccurrences(of: pattern, with: replacement, options: .regularExpression)
+            d = d.replacingPattern(pattern, with: replacement)
         }
         return d
     }
@@ -297,10 +297,10 @@ class ExpressionDescriptor {
             return "\(hourStr):\(minuteStr)"
         }
 
-        let paddedMinute = String(format: "%02d", minute)
+        let paddedMinute = zeroPadded(minute)
 
         if use24Hour {
-            return String(format: "%02d", hour) + ":\(paddedMinute)"
+            return zeroPadded(hour) + ":\(paddedMinute)"
         }
 
         let period = hour >= 12 ? "PM" : "AM"
@@ -315,9 +315,7 @@ class ExpressionDescriptor {
     private func applyFormat(_ format: String, _ args: String...) -> String {
         var result = format
         for arg in args {
-            if let range = result.range(of: "%s") {
-                result.replaceSubrange(range, with: arg)
-            }
+            result = result.replacingFirst("%s", with: arg)
         }
         return result
     }

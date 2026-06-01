@@ -1,5 +1,3 @@
-import Foundation
-
 struct CronParser {
     private static let dowNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
     private static let monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
@@ -14,7 +12,7 @@ struct CronParser {
 
     // Returns 5-element array: [minute, hour, dom, month, dow]
     func parse() throws -> [String] {
-        let upper = expression.trimmingCharacters(in: .whitespaces).uppercased()
+        let upper = expression.trimmingWhitespace().uppercased()
 
         // @-aliases
         switch upper {
@@ -27,9 +25,7 @@ struct CronParser {
         default: break
         }
 
-        var parts = expression.trimmingCharacters(in: .whitespaces)
-            .components(separatedBy: .whitespaces)
-            .filter { !$0.isEmpty }
+        var parts = expression.trimmingWhitespace().splitOnWhitespace()
 
         guard parts.count == 5 else {
             throw CronDescriptorError.parseError("Expression must have exactly 5 fields, found \(parts.count)")
@@ -72,7 +68,7 @@ struct CronParser {
         let upper = f.uppercased()
         var result = upper
         for (i, name) in CronParser.monthNames.enumerated() {
-            result = result.replacingOccurrences(of: name, with: String(i + 1))
+            result = result.replacing(name, with: String(i + 1))
         }
         return result
     }
@@ -83,7 +79,7 @@ struct CronParser {
         if f.hasPrefix("0/") { f = "*/" + f.dropFirst(2) }
         var result = f.uppercased()
         for (i, name) in CronParser.dowNames.enumerated() {
-            result = result.replacingOccurrences(of: name, with: String(i))
+            result = result.replacing(name, with: String(i))
         }
         if dayOfWeekStartIndexZero {
             // 7 is an alias for Sunday (0)
