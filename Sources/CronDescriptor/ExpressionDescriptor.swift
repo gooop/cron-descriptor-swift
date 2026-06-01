@@ -13,7 +13,7 @@ class ExpressionDescriptor {
     }
 
     func getFullDescription() throws -> String {
-        let parser = CronParser(expression, dayOfWeekStartIndexZero: options.dayOfWeekStartIndexZero)
+        let parser = CronParser(expression, dayOfWeekStartIndexZero: options.dayOfWeekStartIndexZero, monthStartIndexZero: options.monthStartIndexZero)
         parts = try parser.parse()
 
         if parts[1] == "@reboot" {

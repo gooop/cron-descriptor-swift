@@ -4,10 +4,12 @@ struct CronParser {
 
     private let expression: String
     private let dayOfWeekStartIndexZero: Bool
+    private let monthStartIndexZero: Bool
 
-    init(_ expression: String, dayOfWeekStartIndexZero: Bool = true) {
+    init(_ expression: String, dayOfWeekStartIndexZero: Bool = true, monthStartIndexZero: Bool = false) {
         self.expression = expression
         self.dayOfWeekStartIndexZero = dayOfWeekStartIndexZero
+        self.monthStartIndexZero = monthStartIndexZero
     }
 
     // Returns 6-element array: [seconds, minute, hour, dom, month, dow]
@@ -84,14 +86,43 @@ struct CronParser {
     private func normalizeMonth(_ field: String) throws -> String {
         var f = field
         if f == "?" { f = "*" }
-        if f.hasPrefix("0/") { f = "*/" + f.dropFirst(2) }
-        // Replace month names (case-insensitive already uppercased by caller? No — field comes from original)
-        let upper = f.uppercased()
-        var result = upper
+        f = normalizeStep(f)
+        var result = f.uppercased()
         for (i, name) in CronParser.monthNames.enumerated() {
             result = result.replacing(name, with: String(i + 1))
         }
+        if monthStartIndexZero {
+            result = shiftPositionTokens(in: result, by: 1)
+        }
         return result
+    }
+
+    // Shift numeric position tokens by `offset`, skipping step values (the part after /).
+    // Handles comma lists, ranges, and step expressions.
+    private func shiftPositionTokens(in expression: String, by offset: Int) -> String {
+        expression.split(separator: ",", omittingEmptySubsequences: false)
+            .map { seg -> String in
+                let s = String(seg)
+                if s.contains("/") {
+                    let parts = s.split(separator: "/", maxSplits: 1).map(String.init)
+                    return shiftRange(parts[0], by: offset) + "/" + parts[1]
+                }
+                return shiftRange(s, by: offset)
+            }
+            .joined(separator: ",")
+    }
+
+    private func shiftRange(_ token: String, by offset: Int) -> String {
+        if token.contains("-") {
+            let parts = token.split(separator: "-", maxSplits: 1).map(String.init)
+            return shiftSingle(parts[0], by: offset) + "-" + shiftSingle(parts[1], by: offset)
+        }
+        return shiftSingle(token, by: offset)
+    }
+
+    private func shiftSingle(_ token: String, by offset: Int) -> String {
+        guard let n = Int(token) else { return token }
+        return String(n + offset)
     }
 
     private func normalizeDow(_ field: String) throws -> String {

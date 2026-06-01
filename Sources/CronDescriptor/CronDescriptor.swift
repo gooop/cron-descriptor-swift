@@ -12,17 +12,20 @@ public struct Options {
     public var verbose: Bool
     public var use24HourTimeFormat: Bool? // nil → use locale default
     public var dayOfWeekStartIndexZero: Bool
+    public var monthStartIndexZero: Bool
     public var locale: any CronLocale
 
     public init(
         verbose: Bool = false,
         use24HourTimeFormat: Bool? = nil,
         dayOfWeekStartIndexZero: Bool = true,
+        monthStartIndexZero: Bool = false,
         locale: any CronLocale = EnLocale()
     ) {
         self.verbose = verbose
         self.use24HourTimeFormat = use24HourTimeFormat
         self.dayOfWeekStartIndexZero = dayOfWeekStartIndexZero
+        self.monthStartIndexZero = monthStartIndexZero
         self.locale = locale
     }
 }

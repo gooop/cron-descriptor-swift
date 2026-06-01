@@ -298,6 +298,19 @@ struct CronDescriptorTests {
         #expect(!result.isEmpty)
     }
 
+    // MARK: - monthStartIndexZero = true
+
+    @Test func monthZeroBased() throws {
+        var opts = Options()
+        opts.monthStartIndexZero = true
+        // 0-indexed: 0=Jan, 5=Jun, 0-2=Jan-Mar
+        #expect(try describe("0 0 1 0 *", options: opts) == "At 12:00 AM, on day 1 of the month, only in January")
+        #expect(try describe("0 0 1 5 *", options: opts) == "At 12:00 AM, on day 1 of the month, only in June")
+        #expect(try describe("0 0 * 0-2 *", options: opts) == "At 12:00 AM, January through March")
+        // Step count must not be shifted: */3 still means every 3 months
+        #expect(try describe("0 0 1 */3 *", options: opts) == "At 12:00 AM, on day 1 of the month, every 3 months")
+    }
+
     // MARK: - dayOfWeekStartIndexZero = false
 
     @Test func dowOneBased() throws {
