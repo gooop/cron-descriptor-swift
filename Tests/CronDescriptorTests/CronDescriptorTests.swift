@@ -37,11 +37,11 @@ struct CronDescriptorTests {
 
     @Test("Specific times", arguments: [
         ("0 0 * * *",   "At 12:00 AM"),
-        ("0 9 * * *",   "At 9:00 AM"),
+        ("0 9 * * *",   "At 09:00 AM"),
         ("0 12 * * *",  "At 12:00 PM"),
-        ("0 21 * * *",  "At 9:00 PM"),
-        ("30 9 * * *",  "At 9:30 AM"),
-        ("15 14 * * *", "At 2:15 PM"),
+        ("0 21 * * *",  "At 09:00 PM"),
+        ("30 9 * * *",  "At 09:30 AM"),
+        ("15 14 * * *", "At 02:15 PM"),
     ]) func specificTime(expr: String, expected: String) throws {
         #expect(try describe(expr) == expected)
     }
@@ -63,18 +63,18 @@ struct CronDescriptorTests {
     // MARK: - Day of week
 
     @Test("DOW — single", arguments: [
-        ("0 9 * * 1",   "At 9:00 AM, only on Monday"),
-        ("0 9 * * Mon", "At 9:00 AM, only on Monday"),
-        ("0 9 * * 0",   "At 9:00 AM, only on Sunday"),
-        ("0 9 * * 5",   "At 9:00 AM, only on Friday"),
+        ("0 9 * * 1",   "At 09:00 AM, only on Monday"),
+        ("0 9 * * Mon", "At 09:00 AM, only on Monday"),
+        ("0 9 * * 0",   "At 09:00 AM, only on Sunday"),
+        ("0 9 * * 5",   "At 09:00 AM, only on Friday"),
         ("0 0 * * Fri", "At 12:00 AM, only on Friday"),
     ]) func dowSingle(expr: String, expected: String) throws {
         #expect(try describe(expr) == expected)
     }
 
     @Test("DOW — range", arguments: [
-        ("0 9 * * 1-5",     "At 9:00 AM, Monday through Friday"),
-        ("0 9 * * Mon-Fri", "At 9:00 AM, Monday through Friday"),
+        ("0 9 * * 1-5",     "At 09:00 AM, Monday through Friday"),
+        ("0 9 * * Mon-Fri", "At 09:00 AM, Monday through Friday"),
         ("0 0 * * 1-5",     "At 12:00 AM, Monday through Friday"),
     ]) func dowRange(expr: String, expected: String) throws {
         #expect(try describe(expr) == expected)
@@ -83,17 +83,17 @@ struct CronDescriptorTests {
     // MARK: - Hour range
 
     @Test func hourRange() throws {
-        #expect(try describe("0 9-17 * * *") == "Every hour, between 9:00 AM and 5:00 PM")
+        #expect(try describe("0 9-17 * * *") == "Every hour, between 09:00 AM and 05:00 PM")
     }
 
     @Test func hourRangeWithDow() throws {
-        #expect(try describe("0 9-17 * * 1-5") == "Every hour, between 9:00 AM and 5:00 PM, Monday through Friday")
+        #expect(try describe("0 9-17 * * 1-5") == "Every hour, between 09:00 AM and 05:00 PM, Monday through Friday")
     }
 
     // MARK: - Multiple hours
 
     @Test func commaHours() throws {
-        #expect(try describe("0 9,17 * * *") == "At 9:00 AM and 5:00 PM")
+        #expect(try describe("0 9,17 * * *") == "At 09:00 AM and 05:00 PM")
     }
 
     // MARK: - Multiple minutes
@@ -107,13 +107,13 @@ struct CronDescriptorTests {
     @Test("Day of month", arguments: [
         ("0 0 1 * *",  "At 12:00 AM, on day 1 of the month"),
         ("0 0 15 * *", "At 12:00 AM, on day 15 of the month"),
-        ("0 9 1 * *",  "At 9:00 AM, on day 1 of the month"),
+        ("0 9 1 * *",  "At 09:00 AM, on day 1 of the month"),
     ]) func dayOfMonth(expr: String, expected: String) throws {
         #expect(try describe(expr) == expected)
     }
 
     @Test func dayOfMonthCommaList() throws {
-        #expect(try describe("0 9 1,15 * *") == "At 9:00 AM, on day 1 and 15 of the month")
+        #expect(try describe("0 9 1,15 * *") == "At 09:00 AM, on day 1 and 15 of the month")
     }
 
     // MARK: - Month
@@ -153,6 +153,22 @@ struct CronDescriptorTests {
         #expect(try describe("30 14 * * *", options: opts) == "At 14:30")
     }
 
+    // MARK: - trimHoursLeadingZero
+
+    @Test func trimHoursLeadingZero() throws {
+        var opts = Options()
+        opts.trimHoursLeadingZero = true
+        #expect(try describe("30 10 * * *", options: opts) == "At 10:30 AM")  // 2-digit, no change
+        #expect(try describe("29 9 * * *",  options: opts) == "At 9:29 AM")   // single-digit trimmed
+
+        var opts24 = Options()
+        opts24.trimHoursLeadingZero = true
+        opts24.use24HourTimeFormat = true
+        #expect(try describe("31 10 * * *", options: opts24) == "At 10:31")   // 24h 2-digit, no change
+        #expect(try describe("30 9 * * *",  options: opts24) == "At 9:30")    // 24h single-digit trimmed
+        #expect(try describe("0 0 * * *",   options: opts24) == "At 0:00")    // 24h midnight trimmed
+    }
+
     // MARK: - Verbose mode
 
     @Test("Verbose retains every-day") func verboseMode() throws {
@@ -165,9 +181,9 @@ struct CronDescriptorTests {
     // MARK: - Case-insensitive names
 
     @Test("Case-insensitive names", arguments: [
-        ("0 9 * * mon",  "At 9:00 AM, only on Monday"),
+        ("0 9 * * mon",  "At 09:00 AM, only on Monday"),
         ("0 0 1 jan *",  "At 12:00 AM, on day 1 of the month, only in January"),
-        ("0 9 * * MON",  "At 9:00 AM, only on Monday"),
+        ("0 9 * * MON",  "At 09:00 AM, only on Monday"),
     ]) func caseInsensitiveNames(expr: String, expected: String) throws {
         #expect(try describe(expr) == expected)
     }
@@ -177,7 +193,7 @@ struct CronDescriptorTests {
     @Test("Whitespace normalization", arguments: [
         ("  * * * * *  ", "Every minute"),
         ("*  *  *  *  *", "Every minute"),
-        ("0 9 * * * ",    "At 9:00 AM"),
+        ("0 9 * * * ",    "At 09:00 AM"),
     ]) func whitespaceNormalization(expr: String, expected: String) throws {
         #expect(try describe(expr) == expected)
     }
@@ -185,7 +201,7 @@ struct CronDescriptorTests {
     // MARK: - ? wildcard
 
     @Test func questionMarkWildcard() throws {
-        #expect(try describe("0 9 ? * *") == "At 9:00 AM")
+        #expect(try describe("0 9 ? * *") == "At 09:00 AM")
         #expect(try describe("0 0 * * ?") == "At 12:00 AM")
     }
 
@@ -219,7 +235,7 @@ struct CronDescriptorTests {
     }
 
     @Test func hourStepFromOffset() throws {
-        #expect(try describe("0 2/3 * * *") == "Every 3 hours, starting at 2:00 AM")
+        #expect(try describe("0 2/3 * * *") == "Every 3 hours, starting at 02:00 AM")
     }
 
     // MARK: - DOM range and step
@@ -248,7 +264,7 @@ struct CronDescriptorTests {
     }
 
     @Test func commaDow() throws {
-        #expect(try describe("0 9 * * 1,3") == "At 9:00 AM, only on Monday and Wednesday")
+        #expect(try describe("0 9 * * 1,3") == "At 09:00 AM, only on Monday and Wednesday")
     }
 
     @Test func commaMultipleMinutes() throws {
@@ -256,7 +272,7 @@ struct CronDescriptorTests {
     }
 
     @Test func commaMultipleHours() throws {
-        #expect(try describe("0 6,12,18 * * *") == "At 6:00 AM, 12:00 PM and 6:00 PM")
+        #expect(try describe("0 6,12,18 * * *") == "At 06:00 AM, 12:00 PM and 06:00 PM")
     }
 
     // MARK: - DOM + DOW both specified
@@ -279,8 +295,8 @@ struct CronDescriptorTests {
         ("* * * * * *",   "Every second"),
         ("*/30 * * * * *", "Every 30 seconds"),
         ("0 * * * * *",   "Every minute"),
-        ("30 0 9 * * *",  "At 30 seconds past the minute, at 9:00 AM"),
-        ("0 30 9 * * *",  "At 9:30 AM"),
+        ("30 0 9 * * *",  "At 30 seconds past the minute, at 09:00 AM"),
+        ("0 30 9 * * *",  "At 09:30 AM"),
         ("*/5 * * * * *", "Every 5 seconds"),
     ]) func sixFieldSeconds(expr: String, expected: String) throws {
         #expect(try describe(expr) == expected)
@@ -322,8 +338,6 @@ struct CronDescriptorTests {
         ("0 0 1W * *",  "At 12:00 AM, on the first weekday of the month"),
         ("0 0 15W * *", "At 12:00 AM, on the weekday nearest day 15 of the month"),
     ]) func wModifier(expr: String, expected: String) throws {
-        // Note: "on %s of the month" format, so "the first weekday" and "the weekday nearest..."
-        // produce correct English without double-the
         #expect(try describe(expr) == expected)
     }
 
@@ -348,11 +362,9 @@ struct CronDescriptorTests {
     @Test func monthZeroBased() throws {
         var opts = Options()
         opts.monthStartIndexZero = true
-        // 0-indexed: 0=Jan, 5=Jun, 0-2=Jan-Mar
         #expect(try describe("0 0 1 0 *", options: opts) == "At 12:00 AM, on day 1 of the month, only in January")
         #expect(try describe("0 0 1 5 *", options: opts) == "At 12:00 AM, on day 1 of the month, only in June")
         #expect(try describe("0 0 * 0-2 *", options: opts) == "At 12:00 AM, January through March")
-        // Step count must not be shifted: */3 still means every 3 months
         #expect(try describe("0 0 1 */3 *", options: opts) == "At 12:00 AM, on day 1 of the month, every 3 months")
     }
 
@@ -361,7 +373,52 @@ struct CronDescriptorTests {
     @Test func dowOneBased() throws {
         var opts = Options()
         opts.dayOfWeekStartIndexZero = false
-        // 1-indexed: 1=Sun, 2=Mon. "2" should resolve to Monday.
-        #expect(try describe("0 9 * * 2", options: opts) == "At 9:00 AM, only on Monday")
+        #expect(try describe("0 9 * * 2", options: opts) == "At 09:00 AM, only on Monday")
+    }
+
+    // MARK: - Additional coverage (cRonstrue parity)
+
+    @Test func stepOfOneNormalized() throws {
+        #expect(try describe("*/1 * * * *") == "Every minute")
+    }
+
+    @Test func everyMinuteOnlyInMarch() throws {
+        #expect(try describe("* * * 3 *") == "Every minute, only in March")
+    }
+
+    @Test func every4Hours() throws {
+        #expect(try describe("0 */4 * * *") == "Every 4 hours")
+    }
+
+    @Test func dowStep() throws {
+        #expect(try describe("* * * * */2") == "Every minute, every 2 days of the week")
+    }
+
+    @Test func multipleHoursWithMinutes() throws {
+        #expect(try describe("30 14,16 * * *") == "At 02:30 PM and 04:30 PM")
+    }
+
+    @Test func mixedMinuteListAndRange() throws {
+        #expect(try describe("2,4-5 1 * * *") == "At 2 and 4 through 5 minutes past the hour, at 01:00 AM")
+    }
+
+    @Test func lInDomCommaList() throws {
+        #expect(try describe("0 20 15,L * *") == "At 08:00 PM, on day 15 and last day of the month")
+    }
+
+    @Test func rangeToLInDom() throws {
+        #expect(try describe("0 20 1-10,20-L * *") == "At 08:00 PM, on day 1 through 10 and 20 through last day of the month")
+    }
+
+    @Test func dowStepFromOffset() throws {
+        #expect(try describe("0 0 * * 1/2") == "At 12:00 AM, every 2 days of the week, starting only on Monday")
+    }
+
+    // MARK: - Wildcard minute + specific hour
+
+    @Test func wildcardMinuteSpecificHour() throws {
+        #expect(try describe("* 0 * * *") == "Every minute, between 12:00 AM and 12:59 AM")
+        #expect(try describe("* 9 * * *") == "Every minute, between 09:00 AM and 09:59 AM")
+        #expect(try describe("* 14 * * *") == "Every minute, between 02:00 PM and 02:59 PM")
     }
 }

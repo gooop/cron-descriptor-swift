@@ -58,6 +58,12 @@ class ExpressionDescriptor {
             return i18n.atSpace() + formatTime(hour, minute)
         }
 
+        if minute == "*" && hourIsPlain {
+            let start = formatTime(hour, "0")
+            let end = formatTime(hour, "59")
+            return i18n.everyMinute() + ", " + applyFormat(i18n.betweenXAndX(), start, end)
+        }
+
         if minute.contains("-") && !minute.contains(",") && !minute.contains("/") && hourIsPlain {
             let ps = minute.split(separator: "-").map(String.init)
             return i18n.everyMinuteBetweenXAndX(
@@ -163,7 +169,7 @@ class ExpressionDescriptor {
         return getSegmentDescription(
             expression: dom,
             allDescription: i18n.commaEveryDay(),
-            getSingleItemDescription: { s in s },
+            getSingleItemDescription: { s in s == "L" ? self.i18n.lastDay() : s },
             getIncrementDescriptionFormat: { s in self.i18n.commaEveryXDays(s) },
             getRangeDescriptionFormat: { _ in self.i18n.commaBetweenDayXAndXOfTheMonth() },
             getDescriptionFormat: { _ in self.i18n.commaOnDayXOfTheMonth() }
@@ -365,15 +371,18 @@ class ExpressionDescriptor {
         }
 
         let paddedMinute = zeroPadded(minute)
+        let trim = options.trimHoursLeadingZero
 
         if use24Hour {
-            return zeroPadded(hour) + ":\(paddedMinute)"
+            let h = trim ? String(hour) : zeroPadded(hour)
+            return "\(h):\(paddedMinute)"
         }
 
         let period = hour >= 12 ? "PM" : "AM"
         if hour > 12 { hour -= 12 }
         if hour == 0 { hour = 12 }
-        return "\(hour):\(paddedMinute) \(period)"
+        let h = trim ? String(hour) : zeroPadded(hour)
+        return "\(h):\(paddedMinute) \(period)"
     }
 
     // MARK: - Format string helper
