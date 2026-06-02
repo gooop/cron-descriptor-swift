@@ -50,7 +50,4 @@ public struct EnLocale: CronLocale {
 
     public func use24HourTimeFormatByDefault() -> Bool { false }
 
-    public func conciseVerbosityReplacements() -> [String: String] {
-        ["on the hour, ": ""]
-    }
 }

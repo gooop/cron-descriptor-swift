@@ -57,7 +57,7 @@ struct CronDescriptorTests {
     }
 
     @Test func everyTwoHours() throws {
-        #expect(try describe("0 */2 * * *") == "Every 2 hours")
+        #expect(try describe("0 */2 * * *") == "On the hour, every 2 hours")
     }
 
     // MARK: - Day of week
@@ -215,7 +215,7 @@ struct CronDescriptorTests {
 
     @Test func zeroSlashNormalization() throws {
         #expect(try describe("0/5 * * * *") == "Every 5 minutes")
-        #expect(try describe("0 0/2 * * *") == "Every 2 hours")
+        #expect(try describe("0 0/2 * * *") == "On the hour, every 2 hours")
     }
 
     // MARK: - Minute range
@@ -235,7 +235,7 @@ struct CronDescriptorTests {
     }
 
     @Test func hourStepFromOffset() throws {
-        #expect(try describe("0 2/3 * * *") == "Every 3 hours, starting at 02:00 AM")
+        #expect(try describe("0 2/3 * * *") == "On the hour, every 3 hours, starting at 02:00 AM")
     }
 
     // MARK: - DOM range and step
@@ -387,7 +387,7 @@ struct CronDescriptorTests {
     }
 
     @Test func every4Hours() throws {
-        #expect(try describe("0 */4 * * *") == "Every 4 hours")
+        #expect(try describe("0 */4 * * *") == "On the hour, every 4 hours")
     }
 
     @Test func dowStep() throws {
