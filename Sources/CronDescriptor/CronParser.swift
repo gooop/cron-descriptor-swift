@@ -67,7 +67,7 @@ struct CronParser {
         try validate(fields[2], range: 0...23, field: "hour")
         try validate(fields[3], range: 1...31, field: "day of month")
         try validate(fields[4], range: 1...12, field: "month")
-        try validate(fields[5], range: 0...6, field: "day of week")
+        try validate(fields[5], range: 0...7, field: "day of week")
 
         return fields
     }
@@ -104,8 +104,6 @@ struct CronParser {
         return result
     }
 
-    // Shift numeric position tokens by `offset`, skipping step values (the part after /).
-    // Handles comma lists, ranges, and step expressions.
     private func shiftPositionTokens(in expression: String, by offset: Int) -> String {
         expression.split(separator: ",", omittingEmptySubsequences: false)
             .map { seg -> String in
@@ -140,25 +138,18 @@ struct CronParser {
         for (i, name) in CronParser.dowNames.enumerated() {
             result = result.replacing(name, with: String(i))
         }
-        if dayOfWeekStartIndexZero {
-            // 7 is an alias for Sunday (0)
-            result = replaceTokens(in: result) { token in
-                if let n = Int(token), n == 7 { return "0" }
-                return token
-            }
-        } else {
+        if !dayOfWeekStartIndexZero {
             // User uses 1-indexed (Sun=1, Sat=7). Normalize to 0-indexed.
             result = replaceTokens(in: result) { token in
                 if let n = Int(token), n >= 1 { return String(n - 1) }
                 return token
             }
         }
+
         return result
     }
 
-    // Replace each standalone numeric token in a cron field value using a transform.
     private func replaceTokens(in expression: String, transform: (String) -> String) -> String {
-        // Split on special chars, transform numeric parts, reassemble
         var result = ""
         var current = ""
         let specials: Set<Character> = ["/", "-", ",", "*"]
@@ -185,9 +176,7 @@ struct CronParser {
 
     private func validateSegment(_ segment: String, range: ClosedRange<Int>, field: String) throws {
         if segment == "*" { return }
-        // L, W, # modifiers: skip numeric validation
         if segment.contains("L") || segment.contains("W") || segment.contains("#") { return }
-        // step: */n or start/n
         if segment.contains("/") {
             let parts = segment.split(separator: "/", maxSplits: 1).map(String.init)
             guard parts.count == 2, let step = Int(parts[1]), step > 0 else {

@@ -21,7 +21,7 @@ public struct EnLocale: CronLocale {
     // Calendar — all have leading ", "
     public func commaEveryDay() -> String { ", every day" }
     public func commaEveryXDays(_ n: String) -> String {
-        n == "1" ? commaEveryDay() : ", every \(n) days"
+        n == "1" ? commaEveryDay() : ", every \(n) days in a month"
     }
     public func commaOnDayXOfTheMonth() -> String { ", on day %s of the month" }
     public func commaBetweenDayXAndXOfTheMonth() -> String { ", between day %s and %s of the month" }

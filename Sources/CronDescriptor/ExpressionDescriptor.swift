@@ -139,13 +139,20 @@ class ExpressionDescriptor {
     }
 
     private func getHoursDescription() -> String {
+        let minute = parts[1]
+        let expandEnd = minute == "*" || minute.contains("59")
+
+        let hourFormatter: (String) -> String = { s in self.formatTime(s, "0") }
+        let endFormatter: (String) -> String = { s in self.formatTime(s, expandEnd ? "59" : "0") }
+
         return getSegmentDescription(
             expression: parts[2],
             allDescription: i18n.everyHour(),
-            getSingleItemDescription: { s in self.formatTime(s, "0") },
+            getSingleItemDescription: hourFormatter,
             getIncrementDescriptionFormat: { s in self.i18n.everyXHours(s) },
             getRangeDescriptionFormat: { _ in self.i18n.betweenXAndX() },
-            getDescriptionFormat: { _ in self.i18n.atX() }
+            getDescriptionFormat: { _ in self.i18n.atX() },
+            getSecondItemDescription: endFormatter
         )
     }
 
@@ -212,8 +219,23 @@ class ExpressionDescriptor {
         if parts[5] == "*" { return "" }
         let days = i18n.daysOfTheWeek()
         let domSpecified = parts[3] != "*"
+
+        // Sort comma-separated DOW values when 7 (Sunday alias) is present, matching cronstrue
+        let dowExpression: String
+        if parts[5].contains(",") && !parts[5].contains("/") && !parts[5].contains("-") {
+            let segs = parts[5].split(separator: ",").map(String.init)
+            let hasSeven = segs.contains(where: { extractNumericPrefix($0) == 7 })
+            if hasSeven {
+                dowExpression = segs.sorted { dowSortKey($0) < dowSortKey($1) }.joined(separator: ",")
+            } else {
+                dowExpression = parts[5]
+            }
+        } else {
+            dowExpression = parts[5]
+        }
+
         return getSegmentDescription(
-            expression: parts[5],
+            expression: dowExpression,
             allDescription: i18n.commaEveryDay(),
             getSingleItemDescription: { s in
                 var exp = s
@@ -226,9 +248,7 @@ class ExpressionDescriptor {
                 return exp
             },
             getIncrementDescriptionFormat: { s in self.i18n.commaEveryXDaysOfTheWeek(s) },
-            getRangeDescriptionFormat: { _ in
-                domSpecified ? self.i18n.commaAndXThroughX() : self.i18n.commaXThroughX()
-            },
+            getRangeDescriptionFormat: { _ in self.i18n.commaXThroughX() },
             getDescriptionFormat: { s in
                 if s.contains("#") {
                     guard let hashIdx = s.firstIndex(of: "#") else { return self.i18n.commaOnlyOnX() }
@@ -260,7 +280,8 @@ class ExpressionDescriptor {
         getSingleItemDescription: (String) -> String,
         getIncrementDescriptionFormat: (String) -> String,
         getRangeDescriptionFormat: (String) -> String,
-        getDescriptionFormat: (String) -> String
+        getDescriptionFormat: (String) -> String,
+        getSecondItemDescription: ((String) -> String)? = nil
     ) -> String {
         if expression.isEmpty { return "" }
         if expression == "*" { return allDescription }
@@ -299,7 +320,8 @@ class ExpressionDescriptor {
                         getSingleItemDescription: getSingleItemDescription,
                         getIncrementDescriptionFormat: getIncrementDescriptionFormat,
                         getRangeDescriptionFormat: { _ in rangeFormat },
-                        getDescriptionFormat: getDescriptionFormat
+                        getDescriptionFormat: getDescriptionFormat,
+                        getSecondItemDescription: getSecondItemDescription
                     )
                     if segHasRange && !segHasIncrement {
                         // Strip the leading ", " that commaXThroughX adds
@@ -315,7 +337,8 @@ class ExpressionDescriptor {
                         getSingleItemDescription: getSingleItemDescription,
                         getIncrementDescriptionFormat: getIncrementDescriptionFormat,
                         getRangeDescriptionFormat: getRangeDescriptionFormat,
-                        getDescriptionFormat: getDescriptionFormat
+                        getDescriptionFormat: getDescriptionFormat,
+                        getSecondItemDescription: getSecondItemDescription
                     )
                     if segDesc.hasPrefix(", ") { segDesc = String(segDesc.dropFirst(2)) }
                     content += segDesc
@@ -336,7 +359,8 @@ class ExpressionDescriptor {
                 let rangeDesc = generateRangeSegmentDescription(
                     segs[0],
                     getRangeDescriptionFormat: getRangeDescriptionFormat,
-                    getSingleItemDescription: getSingleItemDescription
+                    getSingleItemDescription: getSingleItemDescription,
+                    getSecondItemDescription: getSecondItemDescription
                 )
                 if !rangeDesc.hasPrefix(", ") { desc += ", " }
                 desc += rangeDesc
@@ -351,19 +375,41 @@ class ExpressionDescriptor {
         return generateRangeSegmentDescription(
             expression,
             getRangeDescriptionFormat: getRangeDescriptionFormat,
-            getSingleItemDescription: getSingleItemDescription
+            getSingleItemDescription: getSingleItemDescription,
+            getSecondItemDescription: getSecondItemDescription
         )
     }
 
     private func generateRangeSegmentDescription(
         _ rangeExpression: String,
         getRangeDescriptionFormat: (String) -> String,
-        getSingleItemDescription: (String) -> String
+        getSingleItemDescription: (String) -> String,
+        getSecondItemDescription: ((String) -> String)? = nil
     ) -> String {
         let ps = rangeExpression.split(separator: "-", maxSplits: 1).map(String.init)
         let s1 = getSingleItemDescription(ps[0])
-        let s2 = getSingleItemDescription(ps[1])
+        let s2: String
+        if let endFormatter = getSecondItemDescription {
+            s2 = endFormatter(ps[1])
+        } else {
+            s2 = getSingleItemDescription(ps[1])
+        }
         return applyFormat(getRangeDescriptionFormat(rangeExpression), s1, s2)
+    }
+
+  
+    private func extractNumericPrefix(_ s: String) -> Int {
+        var exp = s
+        if let hashIdx = s.firstIndex(of: "#") {
+            exp = String(s[..<hashIdx])
+        } else if s.contains("L") {
+            exp = s.replacing("L", with: "")
+        }
+        return Int(exp) ?? Int.max
+    }
+
+    private func dowSortKey(_ s: String) -> Int {
+        extractNumericPrefix(s)
     }
 
     // MARK: - Verbosity
@@ -404,7 +450,6 @@ class ExpressionDescriptor {
 
     // MARK: - Format string helper
 
-    // Replaces %s tokens positionally with the supplied arguments.
     private func applyFormat(_ format: String, _ args: String...) -> String {
         var result = format
         for arg in args {

@@ -433,4 +433,26 @@ struct CronDescriptorTests {
         #expect(try describe("* 9 * * *") == "Every minute, between 09:00 AM and 09:59 AM")
         #expect(try describe("* 14 * * *") == "Every minute, between 02:00 PM and 02:59 PM")
     }
+
+    // MARK: - Gaps found via cRonstrue comparison
+
+    @Test func domStepDescriptionMissingInAMonth() throws {
+        #expect(try describe("0 0 1-15/2 * *") == "At 12:00 AM, every 2 days in a month, between day 1 and 15 of the month")
+    }
+
+    @Test func dowRangeExtraAndWhenDomSpecified() throws {
+        #expect(try describe("0 0 1 JAN MON-FRI") == "At 12:00 AM, on day 1 of the month, Monday through Friday, only in January")
+    }
+
+    @Test func dowRangeStepWithSevenAlias() throws {
+        #expect(try describe("0 0 * * 0-7/7") == "At 12:00 AM, every 7 days of the week, Sunday through Sunday")
+    }
+
+    @Test func hourRangeEndExpansionWithEffectiveFullMinutes() throws {
+        #expect(try describe("1-59/2 0-23/3 * * *") == "Every 2 minutes, minutes 1 through 59 past the hour, every 3 hours, between 12:00 AM and 11:59 PM")
+    }
+
+    @Test func dowListSortingWithSevenAlias() throws {
+        #expect(try describe("0 0 * * 7,1,7,2,7,3,7,4,7,5,7,6,7") == "At 12:00 AM, only on Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, Sunday, Sunday, Sunday, Sunday, Sunday, and Sunday")
+    }
 }

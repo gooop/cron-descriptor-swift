@@ -45,4 +45,15 @@ extension String {
     func replacingPattern(_ pattern: String, with replacement: String) -> String {
         replacing(pattern, with: replacement)
     }
+
+    // Avoids Foundation's NSString.contains, which requires macOS 13+
+    func contains(_ substring: String) -> Bool {
+        guard !substring.isEmpty else { return true }
+        var idx = startIndex
+        while idx < endIndex {
+            if self[idx...].hasPrefix(substring) { return true }
+            idx = index(after: idx)
+        }
+        return false
+    }
 }
