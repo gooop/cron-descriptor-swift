@@ -173,6 +173,7 @@ struct CronDescriptorTests {
         #expect(try describe("0 0 * * *", options: opts24) == "At 0:00") // 24h midnight trimmed
     }
 
+
     // MARK: - Verbose mode
 
     @Test("Verbose retains every-day") func verboseMode() throws {
@@ -384,6 +385,20 @@ struct CronDescriptorTests {
         var opts = Options()
         opts.dayOfWeekStartIndexZero = false
         #expect(try describe("0 9 * * 2", options: opts) == "At 09:00 AM, only on Monday")
+    }
+
+    @Test("DOW one-based: 0 is out of range and should throw", arguments: [
+        "0 0 * * 0",
+        "0 0 1 1 0",
+        "0 0 * * 0,6",
+        "0 0 * * 0-6",
+        "0 0 * * 0-7",
+        "0 0 * * 0#1",
+        "0 0 * * 0L",
+    ]) func dowOneBasedZeroIsInvalid(expr: String) {
+        var opts = Options()
+        opts.dayOfWeekStartIndexZero = false
+        #expect(throws: (any Error).self) { try describe(expr, options: opts) }
     }
 
     // MARK: - Additional coverage (cRonstrue parity)

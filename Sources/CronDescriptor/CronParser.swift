@@ -140,7 +140,24 @@ struct CronParser {
             result = result.replacing(name, with: String(i))
         }
         if !dayOfWeekStartIndexZero {
-            // User uses 1-indexed (Sun=1, Sat=7). Normalize to 0-indexed.
+            // In 1-based mode (Sun=1..Sat=7), 0 is out of range.
+            var containsZero = false
+            _ = replaceTokens(in: result) { token in
+                let numericPart: String
+                if let hashIdx = token.firstIndex(of: "#") {
+                    numericPart = String(token[..<hashIdx])
+                } else if token.hasSuffix("L") {
+                    numericPart = String(token.dropLast())
+                } else {
+                    numericPart = token
+                }
+                if numericPart == "0" { containsZero = true }
+                return token
+            }
+            if containsZero {
+                throw CronDescriptorError.parseError("Value 0 out of range 1-7 for day of week")
+            }
+            // Shift 1-based to 0-based.
             result = replaceTokens(in: result) { token in
                 if let n = Int(token), n >= 1 { return String(n - 1) }
                 return token
