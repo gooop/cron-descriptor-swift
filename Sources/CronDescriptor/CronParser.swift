@@ -134,6 +134,7 @@ struct CronParser {
         var f = field
         if f == "?" { f = "*" }
         if f.hasPrefix("0/") { f = "*/" + f.dropFirst(2) }
+        f = normalizeStep(f)
         var result = f.uppercased()
         for (i, name) in CronParser.dowNames.enumerated() {
             result = result.replacing(name, with: String(i))

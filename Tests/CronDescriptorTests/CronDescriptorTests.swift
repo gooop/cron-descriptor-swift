@@ -182,6 +182,12 @@ struct CronDescriptorTests {
         #expect(result.contains("every day"))
     }
 
+    @Test func verboseStepOneNormalizationInDow() throws {
+        var opts = Options()
+        opts.verbose = true
+        #expect(try describe("*/1 */1 */1 */1 */1", options: opts) == "Every minute, every hour, every day")
+    }
+
     // MARK: - Case-insensitive names
 
     @Test("Case-insensitive names", arguments: [
