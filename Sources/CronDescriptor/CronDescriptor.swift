@@ -11,6 +11,7 @@ public enum CronDescriptorError: Error, CustomStringConvertible {
 public struct Options {
     public var verbose: Bool
     public var use24HourTimeFormat: Bool? // nil → use locale default
+    public var trimHoursLeadingZero: Bool  // false = pad hours (default), true = no padding
     public var dayOfWeekStartIndexZero: Bool
     public var monthStartIndexZero: Bool
     public var locale: any CronLocale
@@ -18,12 +19,14 @@ public struct Options {
     public init(
         verbose: Bool = false,
         use24HourTimeFormat: Bool? = nil,
+        trimHoursLeadingZero: Bool = false,
         dayOfWeekStartIndexZero: Bool = true,
         monthStartIndexZero: Bool = false,
         locale: any CronLocale = EnLocale()
     ) {
         self.verbose = verbose
         self.use24HourTimeFormat = use24HourTimeFormat
+        self.trimHoursLeadingZero = trimHoursLeadingZero
         self.dayOfWeekStartIndexZero = dayOfWeekStartIndexZero
         self.monthStartIndexZero = monthStartIndexZero
         self.locale = locale

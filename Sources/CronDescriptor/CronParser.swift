@@ -76,9 +76,11 @@ struct CronParser {
 
     private enum Field { case minute, hour, dom }
 
-    // Shared: 0/n → */n
+    // Shared: 0/n → */n, */1 → *
     private func normalizeStep(_ field: String) -> String {
-        field.hasPrefix("0/") ? "*/" + field.dropFirst(2) : field
+        var f = field.hasPrefix("0/") ? "*/" + field.dropFirst(2) : field
+        if f == "*/1" { f = "*" }
+        return f
     }
 
     private func normalize(_ field: String, field fieldType: Field) throws -> String {
