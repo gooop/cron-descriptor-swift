@@ -83,7 +83,7 @@ public extension CronLocale {
     func commaOnTheLastDayOfTheMonth() -> String { ", on the last day of the month" }
     func commaOnTheLastWeekdayOfTheMonth() -> String { ", on the last weekday of the month" }
     func commaDaysBeforeTheLastDayOfTheMonth() -> String { ", %s days before the last day of the month" }
-    func lastDay() -> String { "last day" }
+    func lastDay() -> String { "the last day" }
     func firstWeekday() -> String { "the first weekday" }
     func weekdayNearestDayX() -> String { "the weekday nearest day %s" }
     func commaOnTheX0OfTheMonth() -> String { ", on %s of the month" }

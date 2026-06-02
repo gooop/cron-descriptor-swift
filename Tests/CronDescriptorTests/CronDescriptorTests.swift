@@ -403,11 +403,11 @@ struct CronDescriptorTests {
     }
 
     @Test func lInDomCommaList() throws {
-        #expect(try describe("0 20 15,L * *") == "At 08:00 PM, on day 15 and last day of the month")
+        #expect(try describe("0 20 15,L * *") == "At 08:00 PM, on day 15 and the last day of the month")
     }
 
     @Test func rangeToLInDom() throws {
-        #expect(try describe("0 20 1-10,20-L * *") == "At 08:00 PM, on day 1 through 10 and 20 through last day of the month")
+        #expect(try describe("0 20 1-10,20-L * *") == "At 08:00 PM, on day 1 through 10 and 20 through the last day of the month")
     }
 
     @Test func dowStepFromOffset() throws {
