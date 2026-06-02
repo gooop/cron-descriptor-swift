@@ -20,7 +20,7 @@ struct CronParser {
         // @-aliases
         switch upper {
         case "@REBOOT": return ["", "@reboot", "", "", "", ""]
-        case "@YEARLY", "@ANNUALLY": return ["", "0", "0", "1", "1", "*"]
+        case "@YEARLY", "@ANNUALLY": return ["", "0", "0", "1", try normalizeMonth("1"), "*"]
         case "@MONTHLY": return ["", "0", "0", "1", "*", "*"]
         case "@WEEKLY":
             if !dayOfWeekStartIndexZero {
@@ -99,11 +99,11 @@ struct CronParser {
         if f == "?" { f = "*" }
         f = normalizeStep(f)
         var result = f.uppercased()
-        for (i, name) in CronParser.monthNames.enumerated() {
-            result = result.replacing(name, with: String(i + 1))
-        }
         if monthStartIndexZero {
             result = shiftPositionTokens(in: result, by: 1)
+        }
+        for (i, name) in CronParser.monthNames.enumerated() {
+            result = result.replacing(name, with: String(i + 1))
         }
         return result
     }

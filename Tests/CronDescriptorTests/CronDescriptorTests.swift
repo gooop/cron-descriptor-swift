@@ -379,6 +379,26 @@ struct CronDescriptorTests {
         #expect(try describe("0 0 1 */3 *", options: opts) == "At 12:00 AM, on day 1 of the month, every 3 months")
     }
 
+    @Test("monthStartIndexZero: named months must not be shifted", arguments: [
+        ("0 0 1 JAN *",     "At 12:00 AM, on day 1 of the month, only in January"),
+        ("0 0 1 DEC *",     "At 12:00 AM, on day 1 of the month, only in December"),
+        ("0 0 1 JAN-DEC *", "At 12:00 AM, on day 1 of the month, January through December"),
+        ("0 0 * JAN-MAR *", "At 12:00 AM, January through March"),
+    ]) func monthZeroBasedNamedMonthsNotShifted(expr: String, expected: String) throws {
+        var opts = Options()
+        opts.monthStartIndexZero = true
+        #expect(try describe(expr, options: opts) == expected)
+    }
+
+    @Test("monthStartIndexZero: @yearly and @annually bypass normalization", arguments: [
+        ("@yearly",   "At 12:00 AM, on day 1 of the month, only in February"),
+        ("@annually", "At 12:00 AM, on day 1 of the month, only in February"),
+    ]) func monthZeroBasedYearlyAlias(expr: String, expected: String) throws {
+        var opts = Options()
+        opts.monthStartIndexZero = true
+        #expect(try describe(expr, options: opts) == expected)
+    }
+
     // MARK: - dayOfWeekStartIndexZero = false
 
     @Test func dowOneBased() throws {
