@@ -531,4 +531,29 @@ struct CronDescriptorTests {
     ]) func redundantFullRanges(expr: String, expected: String) throws {
         #expect(try describe(expr) == expected)
     }
+
+    // MARK: - EsLocale bugs
+
+    @Test("EsLocale #modifier — spaceX0OfTheMonth contains extra %s", arguments: [
+        ("0 0 * * 1#1", "A las 00:00, en el primero lunes del mes"),
+        ("0 0 * * 1#2", "A las 00:00, en el segundo lunes del mes"),
+        ("0 0 * * 5#3", "A las 00:00, en el tercer viernes del mes"),
+        ("0 0 * * 0#4", "A las 00:00, en el cuarto domingo del mes"),
+    ]) func esLocaleHashModifier(expr: String, expected: String) throws {
+        var opts = Options()
+        opts.locale = EsLocale()
+        #expect(try describe(expr, options: opts) == expected)
+    }
+
+    @Test("EsLocale DOW range missing 'y' when DOM specified", arguments: [
+        ("0 0 1 JAN MON-FRI", "A las 00:00, el día 1 del mes, y de lunes a viernes, sólo en enero"),
+        ("0 0 1 1 1-5",       "A las 00:00, el día 1 del mes, y de lunes a viernes, sólo en enero"),
+        ("0 0 1,15 * 1-5",    "A las 00:00, el día 1 y 15 del mes, y de lunes a viernes"),
+        ("0 0 1-10 1-6 1-5",  "A las 00:00, entre los días 1 y 10 del mes, y de lunes a viernes, de enero a junio"),
+        ("0 0 L * MON-FRI",   "A las 00:00, en el último día del mes, y de lunes a viernes"),
+    ]) func esLocaleDowRangeWithDom(expr: String, expected: String) throws {
+        var opts = Options()
+        opts.locale = EsLocale()
+        #expect(try describe(expr, options: opts) == expected)
+    }
 }

@@ -28,7 +28,7 @@ public struct EnLocale: CronLocale {
     public func commaOnlyOnX() -> String { ", only on %s" }
     public func commaAndOnX() -> String { ", and on %s" }
     public func commaXThroughX() -> String { ", %s through %s" }
-    public func commaAndXThroughX() -> String { ", and %s through %s" }
+    public func commaAndXThroughX() -> String { ", %s through %s" }
     public func commaEveryXMonths(_ n: String) -> String {
         n == "1" ? "" : ", every \(n) months"
     }

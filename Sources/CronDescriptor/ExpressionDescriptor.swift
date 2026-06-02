@@ -248,7 +248,7 @@ class ExpressionDescriptor {
                 return exp
             },
             getIncrementDescriptionFormat: { s in self.i18n.commaEveryXDaysOfTheWeek(s) },
-            getRangeDescriptionFormat: { _ in self.i18n.commaXThroughX() },
+            getRangeDescriptionFormat: { _ in domSpecified ? self.i18n.commaAndXThroughX() : self.i18n.commaXThroughX() },
             getDescriptionFormat: { s in
                 if s.contains("#") {
                     guard let hashIdx = s.firstIndex(of: "#") else { return self.i18n.commaOnlyOnX() }

@@ -41,7 +41,7 @@ public struct EsLocale: CronLocale {
     public func commaOnTheX0OfTheMonth() -> String { ", en el %s del mes" }
     public func commaOnTheLastX0OfTheMonth() -> String { ", en el último %s del mes" }
     public func commaOnThe() -> String { ", en el " }
-    public func spaceX0OfTheMonth() -> String { " %s del mes" }
+    public func spaceX0OfTheMonth() -> String { " del mes" }
     public func first() -> String { "primero" }
     public func second() -> String { "segundo" }
     public func third() -> String { "tercer" }
