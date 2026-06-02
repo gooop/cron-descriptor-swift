@@ -401,6 +401,27 @@ struct CronDescriptorTests {
         #expect(throws: (any Error).self) { try describe(expr, options: opts) }
     }
 
+    @Test("DOW one-based: named days must not be shifted", arguments: [
+        ("0 0 * * MON",     "At 12:00 AM, only on Monday"),
+        ("0 0 * * SAT",     "At 12:00 AM, only on Saturday"),
+        ("0 0 * * MON-FRI", "At 12:00 AM, Monday through Friday"),
+        ("0 0 * * SAT,SUN", "At 12:00 AM, only on Saturday and Sunday"),
+        ("0 0 * * SUN-SAT", "At 12:00 AM, Sunday through Saturday"),
+    ]) func dowOneBasedNamedDaysNotShifted(expr: String, expected: String) throws {
+        var opts = Options()
+        opts.dayOfWeekStartIndexZero = false
+        #expect(try describe(expr, options: opts) == expected)
+    }
+
+    @Test("DOW one-based: step values must not be shifted", arguments: [
+        ("*/15 */6 */10 */3 */2", "Every 15 minutes, every 6 hours, every 10 days in a month, every 2 days of the week, every 3 months"),
+        ("0 0 1-10/3 1-6/2 1-5/2", "At 12:00 AM, every 3 days in a month, between day 1 and 10 of the month, every 2 days of the week, Sunday through Thursday, every 2 months, January through June"),
+    ]) func dowOneBasedStepNotShifted(expr: String, expected: String) throws {
+        var opts = Options()
+        opts.dayOfWeekStartIndexZero = false
+        #expect(try describe(expr, options: opts) == expected)
+    }
+
     // MARK: - Additional coverage (cRonstrue parity)
 
     @Test func stepOfOneNormalized() throws {

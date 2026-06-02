@@ -136,11 +136,8 @@ struct CronParser {
         if f.hasPrefix("0/") { f = "*/" + f.dropFirst(2) }
         f = normalizeStep(f)
         var result = f.uppercased()
-        for (i, name) in CronParser.dowNames.enumerated() {
-            result = result.replacing(name, with: String(i))
-        }
+
         if !dayOfWeekStartIndexZero {
-            // In 1-based mode (Sun=1..Sat=7), 0 is out of range.
             var containsZero = false
             _ = replaceTokens(in: result) { token in
                 let numericPart: String
@@ -157,14 +154,43 @@ struct CronParser {
             if containsZero {
                 throw CronDescriptorError.parseError("Value 0 out of range 1-7 for day of week")
             }
-            // Shift 1-based to 0-based.
-            result = replaceTokens(in: result) { token in
-                if let n = Int(token), n >= 1 { return String(n - 1) }
-                return token
-            }
+            result = shiftDowBase(result)
+        }
+
+        for (i, name) in CronParser.dowNames.enumerated() {
+            result = result.replacing(name, with: String(i))
         }
 
         return result
+    }
+
+    private func shiftDowBase(_ expression: String) -> String {
+        expression.split(separator: ",", omittingEmptySubsequences: false)
+            .map { seg -> String in
+                let s = String(seg)
+                if s.contains("/") {
+                    let parts = s.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: false).map(String.init)
+                    return shiftDowTokens(parts[0]) + "/" + parts[1]
+                }
+                return shiftDowTokens(s)
+            }
+            .joined(separator: ",")
+    }
+
+    private func shiftDowTokens(_ expression: String) -> String {
+        replaceTokens(in: expression) { token in
+            if let hashIdx = token.firstIndex(of: "#") {
+                let dayPart = String(token[..<hashIdx])
+                let occPart = String(token[token.index(after: hashIdx)...])
+                if let n = Int(dayPart), n >= 1 { return "\(n - 1)#\(occPart)" }
+                return token
+            }
+            if token.hasSuffix("L"), let n = Int(String(token.dropLast())), n >= 1 {
+                return "\(n - 1)L"
+            }
+            if let n = Int(token), n >= 1 { return String(n - 1) }
+            return token
+        }
     }
 
     private func replaceTokens(in expression: String, transform: (String) -> String) -> String {
