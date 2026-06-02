@@ -351,7 +351,7 @@ class ExpressionDescriptor {
         }
 
         if hasIncrement {
-            let segs = expression.split(separator: "/", maxSplits: 1).map(String.init)
+            let segs = expression.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: false).map(String.init)
             let step = segs[1]
             var desc = getIncrementDescriptionFormat(step)
 

@@ -109,7 +109,7 @@ struct CronParser {
             .map { seg -> String in
                 let s = String(seg)
                 if s.contains("/") {
-                    let parts = s.split(separator: "/", maxSplits: 1).map(String.init)
+                    let parts = s.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: false).map(String.init)
                     return shiftRange(parts[0], by: offset) + "/" + parts[1]
                 }
                 return shiftRange(s, by: offset)
@@ -178,9 +178,14 @@ struct CronParser {
         if segment == "*" { return }
         if segment.contains("L") || segment.contains("W") || segment.contains("#") { return }
         if segment.contains("/") {
-            let parts = segment.split(separator: "/", maxSplits: 1).map(String.init)
-            guard parts.count == 2, let step = Int(parts[1]), step > 0 else {
+            let parts = segment.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: false).map(String.init)
+            guard parts.count == 2 else {
                 throw CronDescriptorError.parseError("Invalid step in \(field): \(segment)")
+            }
+            if !parts[1].isEmpty {
+                guard let step = Int(parts[1]), step > 0 else {
+                    throw CronDescriptorError.parseError("Invalid step in \(field): \(segment)")
+                }
             }
             if parts[0] != "*" {
                 try validateSegment(parts[0], range: range, field: field)
