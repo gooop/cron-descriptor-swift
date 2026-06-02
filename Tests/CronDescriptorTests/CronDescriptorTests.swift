@@ -410,6 +410,14 @@ struct CronDescriptorTests {
         #expect(try describe("0 20 1-10,20-L * *") == "At 08:00 PM, on day 1 through 10 and 20 through the last day of the month")
     }
 
+    @Test func hourRangeEndExpansion() throws {
+        // When minutes are wildcard, hour range end expands to X:59
+        #expect(try describe("* 9-17 * * *") == "Every minute, between 09:00 AM and 05:59 PM")
+        #expect(try describe("* 10-12 * * *") == "Every minute, between 10:00 AM and 12:59 PM")
+        // Non-wildcard minutes: no expansion
+        #expect(try describe("0 9-17 * * *") == "Every hour, between 09:00 AM and 05:00 PM")
+    }
+
     @Test func domCommaSorted() throws {
         #expect(try describe("0 45 12 22,17,6,30,26 * *") == "At 12:45 PM, on day 6, 17, 22, 26, and 30 of the month")
     }

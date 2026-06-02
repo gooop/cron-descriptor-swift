@@ -58,6 +58,13 @@ class ExpressionDescriptor {
             return i18n.atSpace() + formatTime(hour, minute)
         }
 
+        if minute == "*" && hour.contains("-") && !hour.contains(",") && !hour.contains("/") {
+            let ps = hour.split(separator: "-", maxSplits: 1).map(String.init)
+            let start = formatTime(ps[0], "0")
+            let end = formatTime(ps[1], "59")
+            return i18n.everyMinute() + ", " + applyFormat(i18n.betweenXAndX(), start, end)
+        }
+
         if minute == "*" && hourIsPlain {
             let start = formatTime(hour, "0")
             let end = formatTime(hour, "59")
