@@ -166,8 +166,18 @@ class ExpressionDescriptor {
             }
         }
 
+        let sortedDom: String
+        if dom.contains(",") && !dom.contains("/") && !dom.contains("-") {
+            let segs = dom.split(separator: ",").map(String.init)
+            let numeric = segs.filter { Int($0) != nil }.sorted { Int($0)! < Int($1)! }
+            let nonNumeric = segs.filter { Int($0) == nil }
+            sortedDom = (numeric + nonNumeric).joined(separator: ",")
+        } else {
+            sortedDom = dom
+        }
+
         return getSegmentDescription(
-            expression: dom,
+            expression: sortedDom,
             allDescription: i18n.commaEveryDay(),
             getSingleItemDescription: { s in s == "L" ? self.i18n.lastDay() : s },
             getIncrementDescriptionFormat: { s in self.i18n.commaEveryXDays(s) },

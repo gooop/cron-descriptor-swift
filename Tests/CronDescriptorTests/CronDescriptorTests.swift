@@ -410,6 +410,10 @@ struct CronDescriptorTests {
         #expect(try describe("0 20 1-10,20-L * *") == "At 08:00 PM, on day 1 through 10 and 20 through the last day of the month")
     }
 
+    @Test func domCommaSorted() throws {
+        #expect(try describe("0 45 12 22,17,6,30,26 * *") == "At 12:45 PM, on day 6, 17, 22, 26, and 30 of the month")
+    }
+
     @Test func dowStepFromOffset() throws {
         #expect(try describe("0 0 * * 1/2") == "At 12:00 AM, every 2 days of the week, starting only on Monday")
     }
