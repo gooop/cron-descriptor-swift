@@ -388,6 +388,7 @@ struct CronDescriptorTests {
     }
 
     @Test("DOW one-based: 0 is out of range and should throw", arguments: [
+        "@weekly",
         "0 0 * * 0",
         "0 0 1 1 0",
         "0 0 * * 0,6",
@@ -399,6 +400,13 @@ struct CronDescriptorTests {
         var opts = Options()
         opts.dayOfWeekStartIndexZero = false
         #expect(throws: (any Error).self) { try describe(expr, options: opts) }
+    }
+
+    @Test func dowOneBasedSevenAliasSortedLast() throws {
+        var opts = Options()
+        opts.dayOfWeekStartIndexZero = false
+        #expect(try describe("0 0 * * 7,1,7,2,7,3,7,4,7,5,7,6,7", options: opts) ==
+            "At 12:00 AM, only on Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Saturday, Saturday, Saturday, Saturday, Saturday, and Saturday")
     }
 
     @Test("DOW one-based: named days must not be shifted", arguments: [

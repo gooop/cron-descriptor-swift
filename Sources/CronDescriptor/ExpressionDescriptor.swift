@@ -220,7 +220,6 @@ class ExpressionDescriptor {
         let days = i18n.daysOfTheWeek()
         let domSpecified = parts[3] != "*"
 
-        // Sort comma-separated DOW values when 7 (Sunday alias) is present, matching cronstrue
         let dowExpression: String
         if parts[5].contains(",") && !parts[5].contains("/") && !parts[5].contains("-") {
             let segs = parts[5].split(separator: ",").map(String.init)
@@ -244,7 +243,10 @@ class ExpressionDescriptor {
                 } else if s.contains("L") {
                     exp = s.replacing("L", with: "")
                 }
-                if let n = Int(exp) { return days[n % 7] }
+                if let n = Int(exp) {
+                    if !options.dayOfWeekStartIndexZero && n == 7 { return days[6] }
+                    return days[n % 7]
+                }
                 return exp
             },
             getIncrementDescriptionFormat: { s in self.i18n.commaEveryXDaysOfTheWeek(s) },

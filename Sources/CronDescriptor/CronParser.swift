@@ -22,7 +22,11 @@ struct CronParser {
         case "@REBOOT": return ["", "@reboot", "", "", "", ""]
         case "@YEARLY", "@ANNUALLY": return ["", "0", "0", "1", "1", "*"]
         case "@MONTHLY": return ["", "0", "0", "1", "*", "*"]
-        case "@WEEKLY": return ["", "0", "0", "*", "*", "0"]
+        case "@WEEKLY":
+            if !dayOfWeekStartIndexZero {
+                throw CronDescriptorError.parseError("Value 0 out of range 1-7 for day of week")
+            }
+            return ["", "0", "0", "*", "*", "0"]
         case "@DAILY", "@MIDNIGHT": return ["", "0", "0", "*", "*", "*"]
         case "@HOURLY": return ["", "0", "*", "*", "*", "*"]
         default: break
@@ -182,13 +186,13 @@ struct CronParser {
             if let hashIdx = token.firstIndex(of: "#") {
                 let dayPart = String(token[..<hashIdx])
                 let occPart = String(token[token.index(after: hashIdx)...])
-                if let n = Int(dayPart), n >= 1 { return "\(n - 1)#\(occPart)" }
+                if let n = Int(dayPart), n >= 1, n != 7 { return "\(n - 1)#\(occPart)" }
                 return token
             }
-            if token.hasSuffix("L"), let n = Int(String(token.dropLast())), n >= 1 {
+            if token.hasSuffix("L"), let n = Int(String(token.dropLast())), n >= 1, n != 7 {
                 return "\(n - 1)L"
             }
-            if let n = Int(token), n >= 1 { return String(n - 1) }
+            if let n = Int(token), n >= 1, n != 7 { return String(n - 1) }
             return token
         }
     }
