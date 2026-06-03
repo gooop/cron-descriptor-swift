@@ -20,8 +20,20 @@ This package is a port of the Javascript package [cRonstrue](https://github.com/
 # Gaps in Parity
 * Does not support 7 part cron entries (seconds and year included)
 
-# Download
-* WIP, just the source for now.
+# Install
+Add to `Package.swift`:
+
+```swift
+.package(url: "https://github.com/gooop/cron-descriptor-swift.git", from: "1.0.0"),
+```
+
+Add the product to your target:
+
+```swift
+.product(name: "CronDescriptor", package: "cron-descriptor-swift"),
+```
+
+In Xcode: **File → Add Package Dependencies…** and paste the repo URL.
 
 # Usage
 
