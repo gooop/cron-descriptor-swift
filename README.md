@@ -1,4 +1,6 @@
 # cron-descriptor-swift
+[![CI](https://github.com/gooop/cron-descriptor-swift/actions/workflows/ci.yml/badge.svg)](https://github.com/gooop/cron-descriptor-swift/actions/workflows/ci.yml)
+
 A cron descriptor for Swift. It takes a cron expression in and outputs human readable text.
 
 This package is a port of the Javascript package [cRonstrue](https://github.com/bradymholt/cRonstrue). The original library was written in C# as [cron-expression-descriptor](https://github.com/bradymholt/cron-expression-descriptor)
