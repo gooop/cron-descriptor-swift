@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main, github-actions]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test Swift ${{ matrix.swift }} on macOS
+    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/') || startsWith(github.event.head_commit.message, '[')
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        swift: ["6.0"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: ${{ matrix.swift }}
+      - name: Build
+        run: swift build --quiet
+      - name: Test
+        run: swift test
+
+  build-linux:
+    name: Build Swift ${{ matrix.swift }} on Linux
+    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/') || startsWith(github.event.head_commit.message, '[')
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        swift: ["5.9", "5.10", "6.0"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: ${{ matrix.swift }}
+      - name: Build
+        run: swift build --quiet

@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    branches: [main, github-actions]
+
+jobs:
+  bump:
+    if: "!startsWith(github.event.head_commit.message, '[')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          fetch-depth: 0
+      - name: Get next version
+        id: meta
+        run: |
+          PREV_MSG=$(git log -1 --format="%s")
+          VERSION=$(cat VERSION 2>/dev/null || echo "0.0.0")
+          PATCH=${VERSION##*.}
+          BASE=${VERSION%.*}
+          NEW_VERSION="$BASE.$((PATCH + 1))"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "prev_msg=$PREV_MSG" >> $GITHUB_OUTPUT
+      - name: Tag and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "${{ steps.meta.outputs.version }}" > VERSION
+          git add VERSION
+          git commit -m "[${{ steps.meta.outputs.version }}] ${{ steps.meta.outputs.prev_msg }}"
+          git push origin HEAD
+          git tag "v${{ steps.meta.outputs.version }}"
+          git push origin "v${{ steps.meta.outputs.version }}"
