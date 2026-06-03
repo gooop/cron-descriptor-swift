@@ -20,6 +20,18 @@ This package is a port of the Javascript package [cRonstrue](https://github.com/
 # Download
 * WIP, just the source for now.
 
+# Usage
+
+```swift
+import CronDescriptor
+
+try CronDescriptor.toString("* * * * *")
+// "Every minute"
+
+CronDescriptor.toStringOrError("* * * * *")
+// "Every minute"
+```
+
 # Gaps in Parity
 * Does not support 7 part cron entries (seconds and year included)
 
